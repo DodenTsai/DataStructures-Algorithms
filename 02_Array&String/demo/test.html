@@ -8,9 +8,18 @@
 <body>
   
 </body>
-<script src="./01_TwoSum.ts"></script>
+<script src="./05_WordDictionary.ts"></script>
 <script>
-  var result = twoSum([2, 7, 11, 15], 9)
-  console.log(result)
+  var wordDictionary = new WordDictionary();
+  wordDictionary.addWord("bad");
+  wordDictionary.addWord("dad");
+  wordDictionary.addWord("mad");
+  
+  var result1 = wordDictionary.search("pad"); // return False
+  var result2 = wordDictionary.search("bad"); // return True
+  var result3 = wordDictionary.search(".ad"); // return True
+  var result4 = wordDictionary.search("b.."); // return True
+
+  console.log(result1, result2, result3, result4)
 </script>
 </html>
