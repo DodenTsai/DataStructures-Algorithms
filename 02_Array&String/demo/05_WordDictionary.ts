@@ -2,7 +2,7 @@
  * Initialize your data structure here.
  */
 var WordDictionary = function() {
-  this.words = {};
+  this.words = new Map();
 };
 
 /**
@@ -11,10 +11,12 @@ var WordDictionary = function() {
  * @return {void}
  */
 WordDictionary.prototype.addWord = function(word) {
-  if (this.words[word.length]) {
-    this.words[word.length].push(word);
+  if (this.words.has(word.length)) {
+    const newArrValue = this.words.get(word.length)
+    newArrValue.push(word)
+    this.words.set(word.length, newArrValue)
   } else {
-    this.words[word.length] = [word];
+    this.words.set(word.length, [word]);
   }
 };
 
@@ -24,17 +26,17 @@ WordDictionary.prototype.addWord = function(word) {
  * @return {boolean}
  */
 WordDictionary.prototype.search = function(word) {
-  if (!this.words[word.length]) {
+  if (!this.words.has(word.length)) {
     return false;
   }
 
   var len = word.length;
   if (!word.includes('.')) {
-    return this.word[len].includes(word);
+    return this.words.get(len).includes(word);
   }
 
   const reg = new RegExp(word);
-  return this.word[len].some(item => reg.test(item));
+  return this.words.get(len).some(item => reg.test(item));
 };
 
 /**
