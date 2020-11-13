@@ -162,3 +162,60 @@ const deleteDuplicates = function(head) {
   return head;
 };
 ```
+
+## dummy 结点问题（链表结点的删除问题延伸）
+LeetCode：[82. 删除排序链表中的重复元素 II](https://leetcode-cn.com/problems/remove-duplicates-from-sorted-list-ii/)
+
+### 问题描述
+给定一个排序链表，删除所有含有重复数字的结点，只保留原始链表中没有重复出现的数字。
+```
+示例 1：
+    输入：1 -> 2 -> 3 -> 3 -> 4 -> 4 -> 5
+    输出：1 -> 2 -> 5
+示例 2：
+    输入：1 -> 1 -> 1 -> 2 -> 3
+    输出：2 -> 3
+```
+
+### 问题分析
+要删除链表中某一个目标结点时，必须知道它的前驱结点，但这个问题是需要将前驱或后继一起删除掉，这时就可以用一个`dummy`结点来解决这个问题。
+
+`dummy`结点是一个人为制造出来的第一个结点的前驱结点，这样链表中所有的结点都能确保有一个前驱结点，也就都能够用同样的逻辑来处理了。`dummy`结点能够降低链表处理过程的复杂度，处理链表时，不设`dummy`结点思路可能会打不开；设了`dummy`结点的话，就算不一定用得上，也不会出错。
+
+### 问题实现
+```
+/**
+  * @param {ListNode} head
+  * @return {ListNode}
+  */
+const deleteDuplicates = function(head) {
+  // 极端情况：0 个或 1 个结点，则不会重复，直接返回
+  if(!head || !head.next) {
+    return head;
+  }
+  // dummy 登场
+  let dummy = new ListNode();
+  // dummy 永远指向头结点
+  dummy.next = head;
+  // cur 从 dummy 开始遍历
+  let cur = dummy;
+  // 当 cur 的后面有至少两个结点时
+  while(cur.next && cur.next.next) {
+    // 对 cur 后面的两个结点进行比较
+    if(cur.next.val === cur.next.next.val) {
+      // 若值重复，则记下这个值
+      let val = cur.next.val;
+      // 反复地排查后面的元素是否存在多次重复该值的情况
+      while(cur.next && cur.next.val===val) {
+        // 若有，则删除
+        cur.next = cur.next.next;
+      }
+    } else {
+      // 若不重复，则正常遍历
+      cur = cur.next;
+    }
+  }
+  // 返回链表的起始结点
+  return dummy.next;
+};
+```
