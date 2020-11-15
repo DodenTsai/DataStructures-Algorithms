@@ -219,3 +219,265 @@ const deleteDuplicates = function(head) {
   return dummy.next;
 };
 ```
+
+## 删除链表的倒数第 N 个结点（快慢指针）
+LeetCode：[19. 删除链表的倒数第N个节点](https://leetcode-cn.com/problems/remove-nth-node-from-end-of-list/)
+
+### 问题描述
+给定一个链表，删除链表的倒数第`n`个结点，并且返回链表的头结点。
+```
+输入：1 -> 2 -> 3 -> 4 -> 5，n = 2
+输出：1 -> 2 -> 3 -> 5
+```
+
+### 问题分析
+可以利用`dummy`结点来处理调头结点为空的边界问题。在涉及到链表操作（尤其是结点删除）的问题时尽量都使用`dummy`结点。
+
+```
+const dummy = new ListNode();
+// 这里的 head 是链表原有的第一个结点
+dummy.next = head;
+```    
+
+这个问题考虑到遍历不可能从后往前走，因此这个“倒数第`n`个” 可以转换为“正数第`len - n + 1`”个。那么其实可以遍历两次，第一次设置一个变量`count = 0`，每遍历到一个不为空的结点，`count`就加`1`，一直遍历到链表结束为止，得出链表的总长度`len`；根据这个总长度，就可以算出倒数第`n`个到底是正数第几个了（`M = len - n + 1`），当遍历到第`M - 1`（即`len - n`）个结点的时候就可以停下来，执行删除操作。
+
+但是，超过一次的遍历性能会有所损耗，这时就需要双指针来帮助处理了。
+
+首先两个指针`slow`和`fast`，全部指向链表的起始位，即`dummy`结点。快指针先出发走上`n`步，在第`n`个结点处停止。然后，快慢指针一起前进，当快指针前进到最后一个结点处时，两个指针再一起停下来。此时，慢指针所指的位置，就是倒数第`n`个结点的前一个结点。基于这个结点来做删除，会非常方便。
+
+链表删除问题中，若走两次遍历，会先求长度，再做减法、找定位。
+
+若用快慢指针，其实是把做减法和找定位这个过程给融合了。通过快指针先行一步、接着快慢指针一起前进这个操作，巧妙地把两个指针之间的差值保持在了`n`上，这样当快指针走到链表末尾（第`len`个）时，慢指针刚好就在`len - n`这个地方稳稳落地。
+
+### 问题实现
+```
+/**
+  * @param {ListNode} head
+  * @param {number} n
+  * @return {ListNode}
+  */
+const removeNthFromEnd = function(head, n) {
+  // 初始化 dummy 结点
+  const dummy = new ListNode();
+  // dummy 指向头结点
+  dummy.next = head;
+  // 初始化快慢指针，均指向 dummy
+  let fast = dummy;
+  let slow = dummy;
+  // 快指针闷头走 n 步
+  while (n !== 0) {
+    fast = fast.next;
+    n--;
+  }
+  // 快慢指针一起走
+  while (fast.next) {
+    fast = fast.next;
+    slow = slow.next;
+  }
+  // 慢指针删除自己的后继结点
+  slow.next = slow.next.next;
+  // 返回头结点
+  return dummy.next;
+};
+```
+
+## 链表的完全反转（多指针法）
+LeetCode：[206. 反转链表](https://leetcode-cn.com/problems/reverse-linked-list/)
+
+### 问题描述
+定义一个函数，输入一个链表的头结点，反转该链表并输出反转后链表的头结点。
+```
+输入：1 -> 2 -> 3 -> 4 -> 5 -> NULL
+输出：5 -> 4 -> 3 -> 2 -> 1 -> NULL
+```
+
+### 问题分析
+处理链表的本质，是处理链表结点之间的指针关系。
+
+链表的反转，本质上是将结点的`next`指针反转。这个问题需要用到三个指针，分别指向目标结点（`cur`）、目标结点的前驱结点（`pre`）、目标结点的后继结点（`next`）。只需要一个简单的`cur.next = pre`，就做到了`next`指针的反转，再用`next`指着`cur`原本的后继结点，从第一个结点开始，每个结点都给它进行一次`next`指针的反转。到最后一个结点时，整个链表就已经被彻底反转掉了。
+
+### 问题实现
+```
+/**
+  * @param {ListNode} head
+  * @return {ListNode}
+  */
+const reverseList = function(head) {
+  // 初始化前驱结点为 null
+  let pre = null;
+  // 初始化目标结点为头结点
+  let cur = head;
+  // 只要目标结点不为 null，遍历就得继续
+  while (cur !== null) {
+    // 记录一下 next 结点
+    let next = cur.next;
+    // 反转指针
+    cur.next = pre;
+    // pre 往前走一步
+    pre = cur;
+    // cur 往前走一步
+    cur = next;
+  }
+  // 反转结束后，pre 就会变成新链表的头结点
+  return pre;
+};
+```
+
+## 局部反转一个链表
+LeetCode：[92. 反转链表 II](https://leetcode-cn.com/problems/reverse-linked-list-ii/)
+
+### 问题描述
+反转从位置`m`到`n`的链表。请使用一趟扫描完成反转。`1 ≤ m ≤ n ≤ 链表长度`。
+```
+输入：1 -> 2 -> 3 -> 4 -> 5 -> NULL, m = 2, n = 4
+输出：1 -> 4 -> 3 -> 2 -> 5 -> NULL
+```
+
+### 问题分析
+这个问题仍然是从指针反转来入手，因为需要反转的是链表的第`m`到`n`之间的结点，这之间的反转可以采用与全部反转一样的逻辑。但是在让`m - 1`个结点指向`n`，`m`节点指向`n + 1`个节点时，还需要对`m - 1`和`n + 1`结点做额外的处理。
+
+由于遍历链表的顺序是从前往后遍历，为了避免结点`m - 1`和结点`m`随着遍历向后推进被遗失，需要提前把`m - 1`结点缓存下来。而结点`n + 1`在随着遍历的进行，当完成了结点`n`的指针反转后，此时`cur`指针就恰好指在结点`n + 1`上。此时将结点`m`的`next`指针指向`cur`、将结点`m - 1`的`next`指针指向`pre`即可。
+
+### 问题实现
+```
+/**
+  * @param {ListNode} head
+  * @param {number} m
+  * @param {number} n
+  * @return {ListNode}
+*/
+// 入参是头结点、m、n
+const reverseBetween = function (head, m, n) {
+  // 定义 pre、cur，用 leftHead 来承接整个区间的前驱结点
+  let pre, cur, leftHead;
+  // 别忘了用 dummy
+  const dummy = new ListNode();
+  // dummy 后继结点是头结点
+  dummy.next = head;
+  // p 是一个游标，用于遍历，最初指向 dummy
+  let p = dummy;
+  // p 往前走 m-1 步，走到整个区间的前驱结点处
+  for (let i = 0; i < m - 1; i++) {
+    p = p.next;
+  }
+  // 缓存这个前驱结点到 leftHead 里
+  leftHead = p;
+  // start 是反转区间的第一个结点
+  let start = leftHead.next;
+  // pre 指向 start
+  pre = start;
+  // cur 指向 start 的下一个结点
+  cur = pre.next;
+  // 开始重复反转动作
+  for (let i = m; i < n; i++) {
+    let next = cur.next;
+    cur.next = pre;
+    pre = cur;
+    cur = next;
+  }
+  // leftHead 的后继结点此时为反转后的区间的第一个结点
+  leftHead.next = pre;
+  // 将区间内反转后的最后一个结点 next 指向cur
+  start.next=cur;
+  // dummy.next 永远指向链表头结点
+  return dummy.next;
+};
+```
+
+## 如何判断链表是否成环
+LeetCode：[141. 环形链表](https://leetcode-cn.com/problems/linked-list-cycle/)
+
+### 问题描述
+给定一个链表，判断链表中是否有环。
+
+如果链表中有某个节点，可以通过连续跟踪`next`指针再次到达，则链表中存在环。
+
+为了表示给定链表中的环，使用整数`pos`来表示链表尾连接到链表中的位置（索引从`0`开始）。 如果`pos`是`-1`，则在该链表中没有环。注意：`pos`不作为参数进行传递，仅仅是为了标识链表的实际情况。
+
+如果链表中存在环，则返回`true` 。 否则，返回`false`。
+
+```
+示例 1：
+      输入：head = [3, 2, 0, -4]
+      输出：TRUE
+示例 2：
+      输入：head = [1, 2]
+      输出：TRUE
+示例 3：
+      输入：head = [1]
+      输出：FALSE
+```
+
+### 问题分析
+一个环形链表的基本修养，是能够让遍历它的游标回到原点，从`flag`出发，只要能够再回到`flag`处，那么就意味着，正在遍历一个环形链表。
+
+### 问题实现
+```
+/**
+  * @param {ListNode} head
+  * @return {boolean}
+*/
+// 入参是头结点
+const hasCycle = function(head) {
+  // 只要结点存在，那么就继续遍历
+  while (head) {
+    // 如果 flag 已经立过了，那么说明环存在
+    if (head.flag) {
+      return true;
+    } else {
+      // 如果 flag 没立过，就立一个 flag 再往下走
+      head.flag = true;
+      head = head.next;
+    }
+  }
+  return false;
+};
+```
+
+## 定位环的起点（环形链表衍生问题）
+LeetCode：[142. 环形链表 II](https://leetcode-cn.com/problems/linked-list-cycle-ii/)
+
+### 问题描述
+给定一个链表，返回链表开始入环的第一个结点。 如果链表无环，则返回`null`。
+
+为了表示给定链表中的环，我们使用整数`pos`来表示链表尾连接到链表中的位置（索引从`0`开始）。 如果`pos`是`-1`，则在该链表中没有环。注意，`pos`仅仅是用于标识环的情况，并不会作为参数传递到函数中。
+
+```
+示例 1：
+    输入：head = [3, 2, 0, -4]
+    输出：tail connects to node index 1
+示例 2：
+    输入：head = head = [1,2]
+    输出：tail connects to node index 0
+示例 3：
+    输入：head = [1]
+    输出：no cycle
+```
+
+### 问题分析
+这个问题在判断是否成环的基础上，增加了一个返回链表的成环起点。如果一个结点是环形链表成环的起点，那么它一定是第一个被发现`flag`标志已存在的结点。
+
+当从头开始遍历一个链表，如果途中进入了一个环，那么首先被打上`flag`标签的其实就是环的起点。待遍历完这个环时，即便环上所有的结点都已经被立了`flag`，但起点处的`flag`一定最先被定位到。因此，只需要在第一次发现`flag`已存在时，将对应的结点返回即可。
+
+### 问题实现
+```
+/**
+  * @param {ListNode} head
+  * @return {ListNode}
+*/
+const detectCycle = function (head) {
+  while (head) {
+    if (head.flag) {
+      return head;
+    } else {
+      head.flag = true;
+      head = head.next;
+    }
+  }
+  return null;
+};
+```
+
+---
+
+【 完 】
