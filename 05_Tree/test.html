@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <script src="./demo/05_InvertBinaryTree.js"></script>
+  <script>
+    // var treeNode1 = new TreeNode(1)
+    // treeNode1.right = new TreeNode(2)
+    // treeNode1.right.left = new TreeNode(3)
+
+    // var treeNode2 = new TreeNode()
+
+    // var treeNode3 = new TreeNode(1)
+
+    // var treeNode4 = new TreeNode(1)
+    // treeNode4.left = new TreeNode(2)
+
+    // var treeNode5 = new TreeNode(1)
+    // treeNode5.right = new TreeNode(2)
+
+    // var result1 = inorderTraversal(treeNode1)
+    // var result2 = inorderTraversal(treeNode2)
+    // var result3 = inorderTraversal(treeNode3)
+    // var result4 = inorderTraversal(treeNode4)
+    // var result5 = inorderTraversal(treeNode5)
+    // console.log(result1, result2, result3, result4, result5)
+
+    var treeNode = new TreeNode(4)
+    treeNode.left = new TreeNode(2)
+    treeNode.right = new TreeNode(7)
+    treeNode.left.left = new TreeNode(1)
+    treeNode.left.right = new TreeNode(3)
+    treeNode.right.left = new TreeNode(6)
+    treeNode.right.right = new TreeNode(9)
+
+    var result = invertTree(treeNode)
+    console.log(result)
+  </script>
+</body>
+</html>
