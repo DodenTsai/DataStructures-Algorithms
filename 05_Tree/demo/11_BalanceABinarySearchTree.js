@@ -11,24 +11,29 @@ function TreeNode(val) {
 }
 
 /**
- * @param {number[]} nums
+ * @param {TreeNode} root
  * @return {TreeNode}
  */
-var sortedArrayToBST = function(nums) {
-  if (!nums.length) return null;
+var balanceBST = function(root) {
+  var nums = [];
+  function inorder(root) {
+    if (!root) return;
 
-  var root = buildBST(0, nums.length - 1);
+    inorder(root.left);
+    nums.push(root.val);
+    inorder(root.right);
+  }
 
-  function buildBST(low, high) {
+  function buildAVL(low, high) {
     if (low > high) return null;
 
     var mid = Math.floor(low + (high - low) / 2);
     var cur = new TreeNode(nums[mid]);
-    cur.left = buildBST(low, mid - 1);
-    cur.right = buildBST(mid + 1, high);
-
+    cur.left = buildAVL(low, mid - 1);
+    cur.right = buildAVL(mid + 1, high);
     return cur;
   }
 
-  return root;
+  inorder(root);
+  return buildAVL(0, nums.length - 1);
 };
