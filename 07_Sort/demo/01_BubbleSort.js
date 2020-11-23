@@ -3,20 +3,56 @@
  * @return {number[]}
  */
 var bubbleSort = function(arr) {
-  
-    // 缓存数组长度
-    const len = arr.length  
-    // 外层循环用于控制从头到尾的比较+交换到底有多少轮
-    for(let i=0;i<len;i++) {  
-        // 内层循环用于完成每一轮遍历过程中的重复比较+交换
-        for(let j=0;j<len-1;j++) {
-            // 若相邻元素前面的数比后面的大
-            if(arr[j] > arr[j+1]) {  
-                // 交换两者
-                [arr[j], arr[j+1]] = [arr[j+1], arr[j]]
-            }
-        }
+  var len = arr.length;
+
+  for (var i = 0; i < len; i++) {
+    for (var j = 0; j < len - 1; j++) {
+      if (arr[j] > arr[j + 1]) {
+        [arr[j], arr[j + 1]] = [arr[j + 1], arr[j]];
+      }
     }
-    // 返回数组
-    return arr
+  }
+
+  return arr;
+}
+
+/**
+ * @param {number[]} arr
+ * @return {number[]}
+ */
+function betterBubbleSort(arr) {
+  var len = arr.length;
+
+  for (var i = 0; i < len; i++) {
+    for (var j = 0; j < len - 1 - i; j++) {
+      if (arr[j] > arr[j + 1]) {
+        [arr[j], arr[j + 1]] = [arr[j + 1], arr[j]];
+      }
+    }
+  }
+
+  return arr;
+}
+
+/**
+ * @param {number[]} arr
+ * @return {number[]}
+ */
+function bestBubbleSort(arr) {
+  var len = arr.length;
+
+  for (var i = 0; i < len; i++) {
+    var flag = false;
+    for (var j = 0; j < len - 1 - i; j++) {
+      if (arr[j] > arr[j + 1]) {
+        [arr[j], arr[j + 1]] = [arr[j + 1], arr[j]];
+        flag = true;
+      }
+    }
+
+    if (flag === false) {
+      return arr;
+    }
+  }
+  return arr;
 }
