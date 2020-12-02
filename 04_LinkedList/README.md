@@ -478,6 +478,96 @@ const detectCycle = function (head) {
 };
 ```
 
+## 复制带随机指针的链表
+LeetCode：[138. 复制带随机指针的链表](https://leetcode-cn.com/problems/copy-list-with-random-pointer/)
+
+### 问题描述
+给定一个链表，每个节点包含一个额外增加的随机指针，该指针可以指向链表中的任何节点或空节点。要求返回这个链表的深拷贝。我们用一个由`n`个节点组成的链表来表示输入/输出中的链表。每个节点用一个`[val, random_index]`表示：
+- `val`：一个表示`Node.val`的整数
+- `random_index`：随机指针指向的节点索引（范围从`0`到`n - 1`）；如果不指向任何节点，则为`null`
+
+```
+示例 1：
+      输入：head = [[7, null], [13, 0], [11, 4], [10, 2], [1, 0]]
+      输出：[[7, null], [13, 0], [11, 4], [10, 2], [1, 0]]
+示例 2：
+      输入：head = [[1, 1], [2, 1]]
+      输出：[[1, 1], [2, 1]]
+示例 3：
+      输入：head = [[3, null], [3, 0], [3, null]]
+      输出：[[3, null], [3, 0], [3, nul]]
+示例 4：
+      输入：head = []
+      输出：[]
+```
+
+### 问题分析
+这个问题首先要思考深拷贝，深深拷贝是相对于引用拷贝来说的，对于 JavaScript 中的对象`a`和对象`b`，假如单纯赋值`a = b`，那么`a`和`b`其实是指向了同一个引用，这就是引用拷贝。深拷贝的意思是说`a`和`b`的内容相同，但是占据两块不同的内存空间，也就是拥有两个不同的引用。对于链表中的 Node 对象（假设对象中的属性分别是数据域`val`和指针域`next`）来说，可以这样做：
+```
+// 先开辟一块新的内存空间
+const copyNode = new Node();
+// copy旧结点的值
+copyNode.val = curr.val;
+// copy旧结点的next指针
+copyNode.next = curr.next ? new Node() : null;
+```
+
+然后考虑如何处理深拷贝过程中的结点关系，在这里可以使用`Map`结构。在这个问题中，除了`next`指针还有`random`指针，结点关系相对复杂。这就意味着在处理结点关系的过程中必然会遇到“根据原结点定位它对应的 copy 结点”的需求，而`Map`结构可以做到这一点。
+
+最后还要考虑`next`指针和`random`指针各自应该如何处理，可以先走一遍普通链表（也就是没有`random`指针）的复制流程。在这个过程中，一方面是完成对结点的复制和存储工作，另一方面也用`next`指针把新链表串了起来。这一步做完之后，新链表和老链表之间唯一的区别就在于`random`指针了。此时只需要同步遍历新旧两个链表，把`random`的指向映射到新链表上去即可。
+
+### 问题实现
+```
+/**
+ * // Definition for a Node.
+ * function Node(val, next, random) {
+ *  this.val = val;
+ *  this.next = next;
+ *  this.random = random;
+ * };
+ */
+
+
+/**
+ * @param {Node} head
+ * @return {Node}
+ */
+const copyRandomList = (head) => {
+  // 处理边界条件
+  if (!head) return null;
+  // 初始化copy的头部结点
+  let copyHead = new Node();
+  // 初始化copy的游标结点
+  let copyNode = copyHead;
+  // 初始化hashMap
+  const hashMap = new Map();
+  let curr = head;
+  // 首次循环，正常处理链表的复制
+  while (curr) {
+    copyNode.val = curr.val;
+    copyNode.next = curr.next ? new Node() : null;
+    hashMap.set(curr, copyNode);
+    curr = curr.next;
+    copyNode = copyNode.next;
+  }
+  // 将游标复位到 head
+  curr = head;
+  // 将copy链表的游标也复位到 copyHead
+  copyNode = copyHead;
+  // 再搞个循环，特殊处理 random 关系
+  while (curr) {
+    // 处理random的指向
+    copyNode.random = curr.random ? hashMap.get(curr.random) : null;
+    // copyNode 和 curr 两个游标一起前进
+    copyNode = copyNode.next;
+    curr = curr.next;
+  }
+
+  // 注意这里返回的是 copyHead 而不是 head
+  return copyHead;
+};
+```
+
 ---
 
 【 完 】

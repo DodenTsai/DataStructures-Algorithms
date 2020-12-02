@@ -403,6 +403,87 @@ const invertTree = function(root) {
 };
 ```
 
+### 从前序（先序）与中序遍历序列构造二叉树
+LeetCode：[105. 从前序与中序遍历序列构造二叉树](https://leetcode-cn.com/problems/construct-binary-tree-from-preorder-and-inorder-traversal/)
+
+#### 问题描述
+根据一棵树的前序遍历与中序遍历构造二叉树；你可以假设树中没有重复的元素。
+```
+示例：
+    输入：preorder = [3, 9, 20, 15, 7]，inorder = [9, 3, 15, 20, 7]
+    输出：[3, 9, 20, null, null, 15, 7]
+```
+
+#### 问题分析
+这个问题的一个切入点，就是前序遍历序列和中序遍历之间的关系。假设前序遍历序列中的元素分别为`p1、p2、...、pn`，中序遍历序列中的元素分别为`i1、i2、...、in`。那么两个序列之间就有以下关系：
+```
+        root  |<-左子树->|  |<- 右子树 ->|  
+         ↓
+前序序列  p1    p2......pk   p(k+1)......pn  
+
+
+         |<- 左子树 ->|      root  |<- 右子树 ->|  
+                             ↓
+中序序列  i1 i2......i(k-1)   ik   i(k+1)......in
+```
+
+它们之间的关系蕴含着两个重要的规律：
+- 前序序列头部的元素`p1`，一定是当前二叉树的根结点
+- 中序遍历序列中，以二叉树的根结点为界划分出的两个子序列，分别对应着二叉树的左子树和二叉树的右子树
+
+基于以上两个规律，不难明确在中序序列中定位到根结点`p1`对应的坐标，然后基于这个坐标划分出左右子树对应的两个子序列，进而明确到左右子树各自在前序、中序遍历序列中对应的索引区间，由此构造左右子树。
+
+以上面的示意简图为例，根结点`p1`在中序序列中的坐标索引为`k`，于是左子树的结点个数就可以通过计算得出：`numLeft = k - 1`。
+
+为了确保逻辑的通用性，把前序序列当前范围的头部索引记为`preL`，尾部索引记为`preR`；把中序序列当前范围的头部索引记为`inL`，尾部索引记为`inR`。那么左子树在前序序列中的索引区间就是`[preL + 1, preL + numLeft]`，在中序序列中的索引区间是`[inL, k - 1]`；右子树在前序序列的索引区间是`[preL + numLeft + 1, preR]`，在中序序列中的索引区间是`[k + 1, inR]`。
+
+此时会发现，基于左子树和右子树各自对应的前序、中序子序列，完全可以直接重复执行上面的逻辑来定位到左右子树各自的根结点和子树的序列区间。通过反复重复这套定位 + 构造的逻辑，就能够完成整个二叉树的构建。
+
+二叉树类题目中的重复逻辑，90% 都是用递归来完成的。
+
+#### 问题实现
+```
+/**
+ * 预定义树的结点结构.
+ * function TreeNode(val) {
+ *   this.val = val;
+ *   this.left = this.right = null;
+ * }
+ */
+/**
+ * @param {number[]} preorder
+ * @param {number[]} inorder
+ * @return {TreeNode}
+ */
+const buildTree = function(preorder, inorder) {
+  // 缓存结点总个数（遍历序列的长度）
+  const len = preorder.length;
+  // 定义构造二叉树结点的递归函数
+  function build (preL, preR, inL, inR) {
+    // 处理越界情况
+    if (preL > preR) {
+      return null;
+    }
+    // 初始化目标结点
+    const root = new TreeNode();
+    // 目标结点映射的是当前前序遍历序列的头部结点（也就是当前范围的根结点）
+    root.val = preorder[preL];
+    // 定位到根结点在中序遍历序列中的位置
+    const k = inorder.indexOf(root.val);  
+    // 计算出左子树中结点的个数
+    const numLeft = k - inL;
+    // 构造左子树
+    root.left = build(preL+1, preL+numLeft, inL, k-1); 
+    // 构造右子树
+    root.right = build(preL+numLeft+1, preR, k+1, inR);
+    // 返回当前结点
+    return root;
+  }   
+  // 递归构造二叉树
+  return build(0, len - 1, 0, len - 1);
+};
+```
+
 # 二叉搜索树
 二叉搜索树（Binary Search Tree）简称 BST，是二叉树的一种特殊形式。它有很多别名，比如排序二叉树、二叉查找树等等。
 
