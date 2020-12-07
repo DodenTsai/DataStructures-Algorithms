@@ -293,6 +293,168 @@ const merge = function(intervals) {
 }
 ```
 
+## 寻找两个正序数组的中位数
+LeetCode：[4. 寻找两个正序数组的中位数](https://leetcode-cn.com/problems/median-of-two-sorted-arrays/)
+
+### 问题描述
+给定两个大小为`m`和`n`的正序（从小到大）数组`nums1`和`nums2`，请你找出这两个正序数组的中位数，并且要求算法的时间复杂度为`O(log(m + n))`。你可以假设`nums1`和`nums2`不会同时为空。
+```
+示例 1：
+      输入：nums1 = [1, 3], nums2 = [2]
+      输出：2.00000
+示例 2：
+      输入：nums1 = [1, 2], nums2 = [3, 4]
+      输出：2.50000
+示例 3：
+      输入：nums1 = [0, 0], nums2 = [0, 0]
+      输出：0.00000
+示例 4：
+      输入：nums1 = [], nums2 = [1]
+      输出：1.00000
+示例 5：
+      输入：nums1 = [2], nums2 = []
+      输出：2.00000
+```
+
+### 问题分析
+问题描述中若要求`log`级别的时间复杂度，则优先使用二分法来解决问题。既然这个问题要求的是`log`级别的时间复杂度，那么首先考虑的就不再是“遍历”，而是“切割”。
+
+如果只允许用切割的方式来定位两个正序数组的中位数，首先应该想到从元素的数量上入手。
+- 如果数组的长度为偶数，偶数个数字的中位数，按照定义需要取中间两个元素的平均值
+- 如果数组的长度为奇数，那么中间位数就是它的中位数
+
+具体到这个问题中，确定分割点时要先想到让`nums1 切割后左侧的元素个数 + nums2 切割后左侧元素的个数 === 两个数组长度和的一半`，即：
+```
+slice1 + slice2 === Math.floor((nums1.length + nuns.length) / 2);
+```
+此时，`nums1`、`nums2`的长度是已知的，这也就意味着只要求出`slice1`和`slice2`中的一个，另一个值就能求出来了。
+
+这时明确一下解决这个问题的大方向，即用二分法定位出其中一个数组的`slice1`，然后通过做减法求出另一个数组的`slice2`。那么，其中一个数组到底以`nums1`为准还是以`nums2`为准是以长度较短的数组为准。这样做，可以减少二分计算的范围提高算法的效率。
+
+因此，解决问题的开局就是要校验两个数组的长度大小关系：
+```
+const findMedianSortedArrays = function (nums1, nums2) {  
+  const len1 = nums1.length;
+  const len2 = nums2.length;   
+  // 确保直接处理的数组（第一个数组）总是较短的数组
+  if(len1 > len2) {
+    return findMedianSortedArrays(nums2, nums1);
+  }
+  ...
+}
+```
+
+从而确保较短的数组始终占据`nums1`的位置，后续就拿`nums1`来做二分计算。
+
+用二分法解决问题，首先需要明确二分的两个端点。在没有任何多余线索的情况下，只能把二分的端点定义为`nums1`的起点和终点:
+```
+// 初始化第一个数组二分范围的左端点
+let slice1L = 0;
+// 初始化第一个数组二分范围的右端点
+let slice1R = len1;
+```
+基于此去计算`slice1`的值：
+```
+slice1 = Math.floor((slice1R - slice1L)/2) + slice1L; 
+```
+然后通过做减法求出`slice2`：
+```
+slice2 = Math.floor(len/2) - slice1;
+```
+确认二分是否合理的标准只有一个：分割后，需要确保左侧的元素都比右侧的元素小，也就是说两个分割线要间接地把两个数组按照正序分为两半。这个标准用变量关系可以表示如下：
+```
+L1 <= R1  
+L1 <= R2  
+L2 <= R1 
+L2 <= R2  
+```
+由于数组本身是正序的，所以`L1 <= R1`、`L2 <= R2`是必然的，需要判断的是剩下两个不等关系：
+- 若发现`L1 > R2`，则说明`slice1`取大了，需要用二分法将`slice1`适当左移
+- 若发现`L2 > R1`，则说明`slice1`取小了，需要用二分法将`slice1`适当右移
+```
+// 处理 L1 > R2 的错误情况
+ if(L1 > R2) {
+  // 将 slice1R 左移，进而使 slice1 对应的值变小
+  slice1R = slice1 - 1;
+} else if(L2 > R1) {
+  // 反之将 slice1L 右移，进而使 slice1 对应的值变大
+  slice1L = slice1 + 1;
+}
+```
+只有当以上两种偏差情况都不发生时，分割线才算定位得恰到好处，此时就可以执行取中位数的逻辑了：
+```
+// len 表示两个数组的总长度
+if (len % 2 === 0) {
+  // 偶数长度对应逻辑（取平均值）
+  const L = L1 > L2 ? L1 : L2;
+  const R = R1 < R2 ? R1 : R2;
+  return  (L + R) / 2;
+} else {
+  // 奇数长度对应逻辑（取中间值）
+  const median = (R1 < R2) ? R1 : R2;
+  return median;
+}
+```
+
+### 问题实现
+```
+/**
+  * @param {number[]} nums1
+  * @param {number[]} nums2
+  * @return {number}
+  */
+const findMedianSortedArrays = function (nums1, nums2) {
+  const len1 = nums1.length;
+  const len2 = nums2.length;
+  // 确保直接处理的数组（第一个数组）总是较短的数组
+  if (len1 > len2) {
+    return findMedianSortedArrays(nums2, nums1);
+  }
+  // 计算两个数组的总长度
+  const len = len1 + len2;
+  // 初始化第一个数组“下刀”的位置
+  let slice1 = 0;
+  // 初始化第二个数组“下刀”的位置
+  let slice2 = 0;
+  // 初始化第一个数组二分范围的左端点
+  let slice1L = 0;
+  // 初始化第一个数组二分范围的右端点
+  let slice1R = len1;
+  let L1, L2, R1, R2;
+  // 当 slice1 没有越界时
+  while (slice1 <= len1) {
+    // 以二分原则更新 slice1
+    slice1 = Math.floor((slice1R - slice1L) / 2) + slice1L;
+    // 用总长度的 1/2 减去 slice1，确定 slice2
+    slice2 = Math.floor(len / 2) - slice1;
+    // 计算 L1、L2、R1、R2
+    const L1 = (slice1 === 0) ? -Infinity : nums1[slice1 - 1];
+    const L2 = (slice2 === 0) ? -Infinity : nums2[slice2 - 1];
+    const R1 = (slice1 === len1) ? Infinity : nums1[slice1];
+    const R2 = (slice2 === len2) ? Infinity: nums2[slice2];
+    // 处理 L1 > R2 的错误情况
+    if (L1 > R2) {
+      // 将 slice1R 左移，进而使 slice1 对应的值变小
+      slice1R = slice1 - 1;
+    } else if (L2 > R1) {
+      // 反之将 slice1L 右移，进而使 slice1 对应的值变大
+      slice1L = slice1 + 1;
+    } else {
+      // 如果已经符合取中位数的条件（L1 < R2 && L2 < R1)，则直接取中位数
+      if (len % 2 === 0) {
+        const L = L1 > L2 ? L1 : L2;
+        const R = R1 < R2 ? R1 : R2;
+        return (L + R) / 2;
+      } else {
+        const median = (R1 < R2) ? R1 : R2;
+        return median;
+      }
+    }
+  }
+  return -1;
+};
+```
+
 # 字符串的问题案例
 ## 基础语法问题案例
 ### 反转字符串
