@@ -279,6 +279,115 @@ MinStack.prototype.getMin = function() {
 };
 ```
 
+### 柱状图中最大的矩形
+LeetCode：[84. 柱状图中最大的矩形](https://leetcode-cn.com/problems/largest-rectangle-in-histogram/)
+
+#### 问题描述
+给定`n`个非负整数，用来表示柱状图中各个柱子的高度。每个柱子彼此相邻，且宽度为 1 。
+```
+示例：
+    输入：[2, 1, 5, 6, 2, 3]
+    输出：10
+``` 
+
+#### 问题分析
+矩形的面积是由长 X 宽来计算的，但是这个问题给到的是一个高度数组。因此对于每个高度来说，以它作为高的矩形宽度是未知的。所以最直观的一个思路，就是固定一个高度，去探索宽度的上限。
+
+可以总结出矩形宽度最大值的计算规则：若下一个柱子比当前柱子高，则持续扩散以当前柱子为高度的矩形宽度（扩展矩形的右边界）；否则停止扩散，“回头看”寻找左边界，进而计算总宽度。
+
+秉持上述的计算规则，对每一个柱子都重复此操作，就能得到每一个柱子所支撑的最大矩形的面积。从这些面积中对比出一个最大值，就算是把这个问题解决了。
+
+#### 问题实现
+```
+/**
+  * @param {number[]} heights
+  * @return {number}
+  */
+const largestRectangleArea = function (heights) {
+  // 判断边界条件
+  if (!heights || !heights.length) return 0;
+  // 初始化最大值
+  let max = -1;
+  // 缓存柱子长度
+  const len = heights.length;
+  // 遍历每根柱子
+  for (let i = 0; i < len; i++) {
+    // 如果遍历完了所有柱子，或者遇到了比前一个矮的柱子，则停止遍历，开始回头计算
+    if (i == len - 1 || heights[i] > heights[i + 1]) {
+      // 初始化前 i 个柱子中最矮的柱子
+      let minHeight = heights[i];
+      // “回头看”
+      for (let j = i; j >= 0; j--) {
+        // 若遇到比当前柱子更矮的柱子，则以更矮的柱子为高进行计算
+        minHeight = Math.min(minHeight, heights[j]);
+        // 计算当前柱子对应的最大宽度的矩形面积，并及时更新最大值
+        max = Math.max(max, minHeight * (i - j + 1));
+      }
+    }
+  }
+  // 返回结果
+  return max;
+};
+```
+
+当然，这个问题还可以用栈来做。
+
+当柱子高度递增时，不做特殊处理（此时只需要入栈）。只有当发现柱子的高度回落时，才会开始“弹出”前面柱子对应的结果（出栈）。所以在编码层面的一个基本思路，就是去维护一个单调递增栈。
+
+```
+/**
+  * @param {number[]} heights
+  * @return {number}
+  */
+const largestRectangleArea = function (heights) {
+  // 判断边界条件
+  if (!heights || !heights.length) return 0;
+  // 初始化最大值
+  let max = -1;
+  // 初始化栈
+  const stack = [];
+  // 缓存柱子高度的数量
+  const len = heights.length;
+  // 开始遍历
+  for (let i = 0; i < len; i++) {
+    // 如果栈已经为空或当前柱子大于等于前一个柱子的高度
+    if (!stack.length || heights[i] >= heights[stack[stack.length - 1]]) {
+      // 执行入栈操作
+      stack.push(i);
+    } else {
+      // 矩形的右边界
+      let right = i;
+      // pop 出作为计算目标存在的那个柱子
+      let target = stack.pop();
+      // 处理柱子高度相等的特殊情况
+      while (stack.length && heights[target] === heights[stack[stack.length - 1]]) {
+        // 若柱子高度相等，则反复 pop
+        target = stack.pop();
+      }
+      // 矩形的左边界
+      let left = (!stack.length) ? -1 : stack[stack.length - 1];
+      // 左右边界定宽，柱子定高，计算矩形面积
+      max = Math.max(max, (right - left - 1) * heights[target]);
+      // 这一步保证下一次循环从当前柱子往下走（因为当前柱子还没作为计算目标计算出结果）
+      i--;
+    }
+  }
+  // rightAdd 是我们针对右边界为空这种情况，补上的一个假的右边界
+  let rightAdd = stack[stack.length - 1] + 1;
+  // 此时栈里是高度单调递增（不减）的柱子索引，这些柱子还没有参与计算，需要针对它们计算一遍
+  while (stack.length) {
+    // 取出栈顶元素作为计算目标
+    let target = stack.pop();
+    // 找到左边界
+    let left = (!stack.length) ? -1 : stack[stack.length - 1];
+    // 注意这里的右边界一定是 rightAdd，想一想，为什么？
+    max = Math.max(max, (rightAdd - left - 1) * heights[target]);
+  }
+  // 返回计算出的最大值
+  return max;
+};
+```
+
 # 队列
 ## 队列的基本概念
 队列是一种先进先出（FIFO，First In First Out）的数据结构，可以看作是一个只用`push`和`shift`完成增删的“数组”。
